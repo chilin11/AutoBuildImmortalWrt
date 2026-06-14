@@ -10,13 +10,13 @@
 #CUSTOM_PACKAGES="$CUSTOM_PACKAGES bash quickfile luci-app-quickfile luci-i18n-quickfile-zh-cn"
 
 # 首页和网络向导
-CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-i18n-quickstart-zh-cn"
+#CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-i18n-quickstart-zh-cn"
 
 # 极光主题和配置 by github eamonxg (已在 wukongdaily/apk 外部仓库中找到)
 CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-theme-aurora luci-app-aurora-config luci-i18n-aurora-config-zh-cn"
 
-# 酷猫主题 by sirpdboy (官方 feed 内置软件)
-CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-theme-kucat"
+# 酷猫主题 by sirpdboy (官方 feed 暂无此 25.12 apk 软件包)
+#CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-theme-kucat"
 
 # 分区扩容 by sirpdboy (已在 wukongdaily/apk 外部仓库中找到)
 #CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-partexp luci-i18n-partexp-zh-cn"
@@ -41,11 +41,11 @@ CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-ssr-plus luci-i18n-ssr-plus-zh-cn"
 # Passwall2 (已在 wukongdaily/apk 外部仓库中找到)
 CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-passwall2 luci-i18n-passwall2-zh-cn"
 
-# MosDNS (官方 feed 内置软件)
-CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-mosdns luci-i18n-mosdns-zh-cn"
+# MosDNS (官方 feed 暂无此 25.12 apk 软件包)
+#CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-mosdns luci-i18n-mosdns-zh-cn"
 
-# Turbo ACC 网络加速 (官方 feed 内置软件)
-CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-turboacc"
+# Turbo ACC 网络加速 (官方 feed 暂无此 25.12 apk 软件包)
+#CUSTOM_PACKAGES="$CUSTOM_PACKAGES luci-app-turboacc"
 
 # Lucky大吉 (已在 wukongdaily/apk 外部仓库中找到)
 CUSTOM_PACKAGES="$CUSTOM_PACKAGES lucky luci-app-lucky luci-i18n-lucky-zh-cn"
