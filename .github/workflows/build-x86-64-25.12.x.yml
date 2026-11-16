@@ -92,6 +92,17 @@ jobs:
             echo "❎ 未启用 luci-app-store"
           fi
 
+      - name: Apply Dockerman hotfix
+        if: ${{ inputs.include_docker == 'yes' }}
+        run: |
+          source="$RUNNER_TEMP/docker_rpc.uc"
+          curl -fsSL --retry 3 \
+            https://raw.githubusercontent.com/openwrt/luci/1c75ea46c68ebc386fef9922089260de16f30417/applications/luci-app-dockerman/root/usr/share/rpcd/ucode/docker_rpc.uc \
+            -o "$source"
+          python3 patches/dockerman/apply.py "$source" \
+            files/usr/share/rpcd/ucode/docker_rpc.uc | tee dockerman-hotfix.txt
+          echo "DOCKERMAN_SOURCE_SHA256=$(sha256sum "$source" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
       - name: Build ImmortalWrt-x86-64-efi 25.12.x
         run: |
           profile="${{ github.event.inputs.profile }}"
@@ -123,10 +134,29 @@ jobs:
             -v "${{ github.workspace }}/x86-64/build25.sh:/home/build/immortalwrt/build.sh" \
             -e PROFILE=$ROOTFS_SIZE \
             -e INCLUDE_DOCKER=$include_docker \
+            -e DOCKERMAN_SOURCE_SHA256 \
             -e ENABLE_PPPOE=${{ inputs.enable_pppoe }} \
             -e PPPOE_ACCOUNT=${{ inputs.pppoe_account }} \
             -e PPPOE_PASSWORD=${{ inputs.pppoe_password }} \
-          immortalwrt/imagebuilder:x86-64-openwrt-${luci_version} /bin/bash /home/build/immortalwrt/build.sh
+          immortalwrt/imagebuilder:x86-64-openwrt-${luci_version} /bin/bash -e -o pipefail -c '
+            /bin/bash /home/build/immortalwrt/build.sh
+            if [ "$INCLUDE_DOCKER" = "yes" ]; then
+              # Check the APK actually used, not merely a separately downloaded source.
+              verify_dir=$(mktemp -d)
+              for package in dl/luci-app-dockerman-*.apk; do
+                test -f "$package"
+                staging_dir/host/bin/apk extract --allow-untrusted \
+                  --destination "$verify_dir" "$package"
+                echo "$DOCKERMAN_SOURCE_SHA256  $verify_dir/usr/share/rpcd/ucode/docker_rpc.uc" | sha256sum -c -
+              done
+              # Verify the SquashFS payload used to assemble the firmware image.
+              rootfs=$(find build_dir -type f -name root.squashfs -print -quit)
+              test -n "$rootfs"
+              staging_dir/host/bin/unsquashfs4 -cat "$rootfs" usr/share/rpcd/ucode/docker_rpc.uc | \
+                cmp - files/usr/share/rpcd/ucode/docker_rpc.uc
+              echo "Dockerman package baseline and firmware overlay verified"
+            fi
+          '
           
 
       - name: Create info
@@ -143,6 +173,9 @@ jobs:
           EOF
 
           if [ "${{ github.event.inputs.include_docker }}" == "yes" ]; then
+            printf '\n### Dockerman hotfix\n```text\n' >> "${{ github.workspace }}/router-info.md"
+            cat dockerman-hotfix.txt >> "${{ github.workspace }}/router-info.md"
+            printf '```\n' >> "${{ github.workspace }}/router-info.md"
             extra_content="#### 默认带docker"
             echo -e "\n$extra_content" >> ${{ github.workspace }}/router-info.md
           else
@@ -152,7 +185,7 @@ jobs:
       - name: Upload ImmortWrt as release assets
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: Autobuild-x86-64
+          tag_name: ${{ github.ref_name == 'master' && 'Autobuild-x86-64' || 'Autobuild-x86-64-dev' }}
           body_path: ${{ github.workspace }}/router-info.md
           files: |
             ${{ github.workspace }}/bin/targets/x86/64/*squashfs-combined-efi.img.gz
