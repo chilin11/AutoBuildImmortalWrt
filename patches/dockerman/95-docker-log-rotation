@@ -1,0 +1,14 @@
+#!/bin/sh
+# Docker's default json-file logs grow without limit. With /opt/docker on the
+# system overlay, a chatty container can fill it after weeks, after which image
+# pulls and container starts fail even across reboots.
+# The local driver rotates by default (about 100 MB per container).
+# Only fills an unset option: respects user log settings and alt_config_file.
+# Applies to containers created or recreated after dockerd starts with it.
+
+[ -f /etc/config/dockerd ] || exit 0
+[ "$(uci -q get dockerd.globals)" = "globals" ] || exit 0
+[ -z "$(uci -q get dockerd.globals.alt_config_file)" ] || exit 0
+[ -z "$(uci -q get dockerd.globals.log_driver)" ] || exit 0
+
+uci set dockerd.globals.log_driver='local' && uci commit dockerd

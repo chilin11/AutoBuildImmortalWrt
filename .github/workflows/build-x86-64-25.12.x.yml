@@ -102,6 +102,9 @@ jobs:
             -o "$source"
           python3 patches/dockerman/apply.py "$source" \
             files/usr/share/rpcd/ucode/docker_rpc.uc | tee dockerman-hotfix.txt
+          install -D -m 0755 patches/dockerman/95-docker-log-rotation \
+            files/etc/uci-defaults/95-docker-log-rotation
+          echo "Docker log rotation default: local driver (only if unset)" | tee -a dockerman-hotfix.txt
           echo "DOCKERMAN_SOURCE_SHA256=$(sha256sum "$source" | cut -d' ' -f1)" >> "$GITHUB_ENV"
 
       - name: Build ImmortalWrt-x86-64-efi 25.12.x
@@ -155,6 +158,8 @@ jobs:
               test -n "$rootfs"
               staging_dir/host/bin/unsquashfs4 -cat "$rootfs" usr/share/rpcd/ucode/docker_rpc.uc | \
                 cmp - files/usr/share/rpcd/ucode/docker_rpc.uc
+              staging_dir/host/bin/unsquashfs4 -cat "$rootfs" etc/uci-defaults/95-docker-log-rotation | \
+                cmp - files/etc/uci-defaults/95-docker-log-rotation
               echo "Dockerman package baseline and firmware overlay verified"
             fi
           '
